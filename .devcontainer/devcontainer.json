@@ -1,0 +1,55 @@
+{
+  "name": "Android Dev",
+  "build": {
+    "dockerfile": "Dockerfile",
+    "args": {
+      "PLATFORM_VERSION": "34",
+      "BUILD_TOOLS_VERSION": "34.0.0",
+      "NODE_VERSION": "20",
+      "FLUTTER_VERSION": "3.29.2"
+    }
+  },
+
+  // ── USB cable passthrough + host network ───────────────────
+  "runArgs": [
+    "--network=host",
+    "--privileged",
+    "-v", "/dev/bus/usb:/dev/bus/usb"
+  ],
+
+  // ── Point container ADB to host ADB server ─────────────────
+  "remoteEnv": {
+    "ANDROID_ADB_SERVER_HOST": "127.0.0.1",
+    "ANDROID_ADB_SERVER_PORT": "5037"
+  },
+
+  // ── Persist Gradle + npm caches across rebuilds ────────────
+  "mounts": [
+    "source=gradle-cache,target=/root/.gradle,type=volume",
+    "source=npm-cache,target=/root/.npm,type=volume"
+  ],
+
+  // ── VS Code extensions ────────────────────────────────────
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "msjsdiag.vscode-react-native",
+        "esbenp.prettier-vscode",
+        "dbaeumer.vscode-eslint",
+        "eamodio.gitlens",
+        "PKief.material-icon-theme",
+        "redhat.java",
+        "vscjava.vscode-gradle",
+        "formulahendry.android-debug"
+      ],
+      "settings": {
+        "terminal.integrated.defaultProfile.linux": "bash",
+        "java.home": "/usr/lib/jvm/java-17-openjdk-amd64",
+        "android.adbPath": "/opt/android-sdk/platform-tools/adb"
+      }
+    }
+  },
+
+  "postCreateCommand": "bash .devcontainer/setup.sh",
+  "remoteUser": "root"
+}
