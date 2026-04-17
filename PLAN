@@ -1,0 +1,487 @@
+---
+
+# 📄 SIP App Working Prototype — PLAN
+
+## 🎯 Goal
+
+Build a **working SIP app (Flutter)** with:
+
+* Register to SIP server
+* Make & receive calls
+* Mute / Speaker controls
+* Hangup
+* Save call logs
+
+Final result = **Fully working prototype (Android first, then Linux)**
+
+---
+
+# 🧩 Step 1: Define What “Done” Means (MVP)
+
+Before coding, clearly define success.
+
+### Parts:
+
+- User can **enter SIP credentials**
+- App can **register to SIP server**
+- User can:
+  - Make a call
+  - Receive a call
+
+- During call:
+  - Mute works
+  - Speaker toggle works
+  - Hangup works
+
+- After call:
+  - Call is saved in **call logs**
+
+👉 Update this in:
+
+- `README.md`
+
+---
+
+# ⚙️ Step 2: Setup Dependencies
+
+Add required packages to make SIP + storage work.
+
+### Parts:
+
+- SIP & media handling package
+- Secure storage (for credentials)
+- Local storage (for call logs)
+- Permissions support (mic)
+
+👉 Update:
+
+- `pubspec.yaml`
+
+👉 After adding:
+
+```bash
+flutter pub get
+```
+
+---
+
+# 🔧 Backend Setup (Asterisk + DevContainer)
+
+## 🧩 Step 2.1: Setup Local SIP Server using Asterisk (DevContainer)
+
+We will run a **local SIP server using Asterisk** inside a `.devcontainer`.
+
+This makes development easy and consistent.
+
+---
+
+## ⚙️ Why DevContainer?
+
+Using `.devcontainer`:
+
+- Same setup for everyone
+- No manual installs on your system
+- Works directly in VS Code
+
+---
+
+## 🏗️ Parts to Implement
+
+### 1. Create `.devcontainer` folder
+
+Structure: Create a `.devcontainer` folder with `devcontainer.json` and `Dockerfile`.
+
+---
+
+### 2. Install Asterisk in Dockerfile
+
+Add Asterisk and required tools via apt-get in the Dockerfile.
+
+---
+
+### 3. Start Asterisk automatically
+
+Set the CMD instruction to start Asterisk in foreground mode.
+
+---
+
+### 4. Configure SIP users
+
+Edit `/etc/asterisk/pjsip.conf` to configure SIP endpoints with authentication and audio settings.
+
+---
+
+### 5. Dialplan (Call routing)
+
+Edit `/etc/asterisk/extensions.conf` to configure call routing rules for internal extensions.
+
+---
+
+### 6. Run DevContainer
+
+In VS Code:
+
+- Open project
+- Click **“Reopen in Container”**
+
+Asterisk will start automatically.
+
+---
+
+## 📡 How Flutter App Connects
+
+Use in Settings Screen:
+
+- SIP Server → `localhost` (or container IP)
+- Username → `1001`
+- Password → `1234`
+
+---
+
+# 🔁 Step 2.2: Dependency Update (Important)
+
+Update `pubspec.yaml` to match backend:
+
+### Add:
+
+- SIP client library (compatible with Asterisk)
+- UDP/TCP support if needed
+
+👉 Now your dependencies + backend are aligned.
+
+---
+
+# 🔄 Production Upgrade (Twilio → Asterisk)
+
+## 🧠 Current Dev Setup
+
+- Local Asterisk server (free, local testing)
+
+## 🧠 Production Option
+
+Replace with Twilio SIP APIs
+
+---
+
+## 🔁 What Changes When Switching?
+
+### ❌ What DOES NOT change:
+
+- Flutter UI
+- Call screens
+- State management
+- SIP logic (mostly same)
+
+---
+
+### ✅ What NEEDS to change:
+
+#### 1. SIP Credentials Source
+
+- Asterisk → static config (1001 / 1234)
+- Twilio → dynamic credentials (API generated)
+
+---
+
+#### 2. SIP Server Address
+
+- Asterisk:
+
+  ```
+  localhost / container IP
+  ```
+
+- Twilio:
+
+  ```
+  sip.twilio.com
+  ```
+
+---
+
+#### 3. Authentication
+
+- Asterisk:
+  - Simple username/password
+
+- Twilio:
+  - SIP domain
+  - Auth tokens / API keys
+
+---
+
+#### 4. Dialing Format
+
+- Asterisk:
+
+  ```
+  1001 → 1002
+  ```
+
+- Twilio:
+
+  ```
+  +91XXXXXXXXXX (E.164 format)
+  ```
+
+---
+
+#### 5. NAT / Networking
+
+- Asterisk (local): simple
+- Twilio (cloud): needs proper:
+  - public IP
+  - firewall rules
+  - STUN/TURN (for media)
+
+---
+
+## 🧩 Minimal Code Changes Needed
+
+In your SIP service:
+
+```dart
+// change only config values
+server = "sip.twilio.com";
+username = "your_twilio_user";
+password = "your_twilio_pass";
+```
+
+👉 Core logic remains same.
+
+---
+
+# ✅ Final Architecture (Updated)
+
+```
+Flutter App
+   ↓
+SIP Service (Dart)
+   ↓
+Asterisk (Dev via DevContainer)
+   ↓
+(Production)
+   ↓
+Twilio SIP API
+```
+
+---
+
+---
+
+# 📱 Step 3: Android Setup (Important)
+
+Without this, calls won’t work.
+
+### Parts:
+
+Add permissions in:
+`AndroidManifest.xml`
+
+- Internet
+- Microphone
+- Audio settings
+
+👉 File:
+
+- `android/app/src/main/AndroidManifest.xml`
+
+---
+
+# 🧱 Step 4: App Structure (UI Setup)
+
+Replace default Flutter counter app.
+
+### Parts:
+
+Create screens:
+
+- Settings Screen → enter SIP credentials
+- Dialpad Screen → enter number & call
+- Call Screen → show call status + controls
+- Call Log Screen → show previous calls
+
+Also:
+
+- Setup navigation (routes)
+- Clean main.dart → only entry point
+
+👉 Files:
+
+- `lib/main.dart`
+- `lib/screens/...`
+
+---
+
+# 🔧 Step 5: Service Layer (Core Logic)
+
+This is the **brain of the app**.
+
+### Parts:
+
+#### 1. SIP Service
+
+Handles:
+
+- Register / unregister
+- Make call
+- Receive call
+- Hangup
+
+#### 2. Storage Service
+
+Handles:
+
+- Save credentials
+- Save call logs
+- Fetch call logs
+
+#### 3. Audio Control
+
+Handles:
+
+- Mute / unmute
+- Speaker on/off
+
+👉 Folder:
+
+- `lib/services/`
+
+---
+
+# 🔄 Step 6: Connect UI with SIP Events
+
+Make app reactive (important step).
+
+### Parts:
+
+Handle states:
+
+- Idle
+- Registering
+- Registered
+- Ringing
+- In Call
+- Call Ended
+
+Flow:
+
+- SIP events → update UI
+- On call end → save log
+
+Example:
+
+- Incoming call → open Call Screen
+- Call ended → save to logs
+
+---
+
+# 📞 Step 7: Implement Full Call Flow (Android First)
+
+Now make everything work together.
+
+### Parts:
+
+Test full flow:
+
+1. Enter credentials → Register
+2. Dial number → Outgoing call
+3. Receive call → Accept / Reject
+4. During call:
+   - Mute toggle
+   - Speaker toggle
+
+5. End call → Save log
+
+Also handle errors:
+
+- Wrong credentials
+- Call failed
+- No network
+
+👉 Run:
+
+```bash
+flutter run -d android
+```
+
+---
+
+# 🐧 Step 8: Linux Support (Stabilization)
+
+After Android works, fix Linux issues.
+
+### Parts:
+
+- Test calling flow
+- Fix audio routing issues
+- Ensure SIP still registers
+
+👉 Run:
+
+```bash
+flutter run -d linux
+```
+
+---
+
+# 🧾 Step 9: Call Log System
+
+Make logs useful.
+
+### Parts:
+
+Each log should store:
+
+- Number
+- Type (incoming/outgoing/missed)
+- Time
+- Duration
+
+Display in:
+
+- Call Log Screen
+
+---
+
+# 📘 Step 10: Documentation
+
+Make project usable by others.
+
+### Parts:
+
+Update `README.md` with:
+
+#### How to Run
+
+```bash
+flutter pub get
+flutter run
+```
+
+#### SIP Backend Options
+
+1. External SIP server
+2. Local Asterisk setup
+
+#### Basic Usage:
+
+- Enter credentials
+- Register
+- Call
+
+---
+
+# ✅ Final Result
+
+At the end, you will have:
+✔ Flutter SIP app
+✔ Working SIP registration
+✔ Outgoing & incoming calls
+✔ Mute & speaker controls
+✔ Call logs
+✔ Android working fully
+✔ Linux supported
+✔ Local SIP server (Asterisk via DevContainer)
+✔ Full call flow testing locally
+✔ Easy upgrade path to Twilio production
