@@ -19,6 +19,12 @@ if id -u asterisk >/dev/null 2>&1; then
 fi
 
 echo "[devcontainer] Starting Asterisk in background..."
+
+if command -v adb >/dev/null 2>&1; then
+  adb reverse tcp:5060 tcp:5060 >/dev/null 2>&1 || true
+  echo "[devcontainer] adb reverse tcp:5060 -> tcp:5060"
+fi
+
 asterisk -C "$ASTERISK_CONF" -f -U "$ASTERISK_USER" -G "$ASTERISK_GROUP" \
   >/tmp/asterisk.log 2>&1 &
 

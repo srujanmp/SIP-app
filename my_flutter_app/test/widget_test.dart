@@ -7,6 +7,6 @@ void main() {
     await tester.pumpWidget(const SipApp());
 
     expect(find.text('Dialpad'), findsOneWidget);
-    expect(find.text('Call'), findsOneWidget);
+    expect(find.text('Register from Settings first'), findsOneWidget);
   });
 }

@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'app.dart';
+import 'services/sip_service.dart';
 
-void main() {
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await SipService.instance.initialize();
   runApp(const SipApp());
 }
