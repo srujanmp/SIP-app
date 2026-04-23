@@ -51,5 +51,6 @@
   },
 
   "postCreateCommand": "bash .devcontainer/setup.sh",
+  "postStartCommand": "bash .devcontainer/start-asterisk.sh",
   "remoteUser": "root"
 }
