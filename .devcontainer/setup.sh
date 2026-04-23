@@ -27,6 +27,8 @@ echo "→ Checking ADB connection..."
 adb version
 echo "→ Connected devices:"
 adb devices
+adb reverse tcp:5060 tcp:5060 >/dev/null 2>&1 || true
+echo "→ ADB reverse set for tcp:5060"
 
 # ── Print SDK info ────────────────────────────────────────────
 echo "→ Installed Android SDK components:"
